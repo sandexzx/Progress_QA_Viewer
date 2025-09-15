@@ -116,4 +116,16 @@
   function getCss(varName) {
     return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
   }
+
+  // Reset button functionality
+  const resetBtn = document.getElementById('resetBtn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      if (confirm('Вы уверены, что хотите сбросить весь прогресс? Это действие нельзя отменить.')) {
+        fetch('/reset', { method: 'POST' })
+          .then(() => window.location.reload())
+          .catch(() => alert('Ошибка при сбросе'));
+      }
+    });
+  }
 })();

@@ -104,6 +104,13 @@ button.primary {
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 6px 20px rgba(10,132,255,0.35);
 }
 
+button.reset {
+  background: linear-gradient(180deg, #ff3b30, #d63027);
+  color: white;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 6px 20px rgba(255,59,48,0.35);
+}
+button.reset:hover { filter: brightness(0.9); }
+
 .progress {
   margin-top: 20px;
   padding: 16px 0;
