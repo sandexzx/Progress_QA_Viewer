@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Progress QA Viewer</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+  <script defer src="/static/app.js"></script>
+  <meta name="color-scheme" content="light dark">
+  <style>
+    /* Optional: prefer SF font on Apple devices */
+    @supports (font: -apple-system-body) {
+      html { font: -apple-system-body; }
+    }
+  </style>
+  </head>
+<body>
+  <header class="container">
+    <h1>Прогресс подготовки (QA)</h1>
+    <p class="subtitle">Минималистичный трекер в стиле Apple</p>
+  </header>
+
+  <main class="container card">
+    <section class="controls">
+      <form action="{{ url_for('set_total') }}" method="post" class="inline-form">
+        <label for="total">Всего вопросов:</label>
+        <input type="number" min="0" id="total" name="total" value="{{ total }}" required>
+        <button type="submit">Обновить</button>
+      </form>
+
+      <form action="{{ url_for('add') }}" method="post">
+        <button type="submit" class="primary">+1 вопрос закрыт</button>
+      </form>
+    </section>
+
+    <section class="progress">
+      <div class="progress-header">
+        <div><strong>{{ completed }}</strong> из <strong>{{ total }}</strong></div>
+        <div>{{ '%.1f' % pct }}%</div>
+      </div>
+      <div class="progress-bar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ '%.1f' % pct }}">
+        <div class="progress-fill" style="width: {{ pct }}%"></div>
+      </div>
+      <div class="progress-footer">
+        <span>Осталось: <strong>{{ remaining }}</strong></span>
+        {% if eta_iso %}
+          <span>ETA: <strong>{{ eta_iso.split('T')[0] }}</strong></span>
+        {% else %}
+          <span>ETA: —</span>
+        {% endif %}
+        <span>Скорость: <strong>{{ rate_per_day }}</strong>/день</span>
+      </div>
+    </section>
+
+    {% if completed > 0 %}
+    <section class="chart">
+      <div class="chart-controls">
+        <button id="fullChartBtn" class="chart-toggle active">Полный прогноз</button>
+        <button id="currentChartBtn" class="chart-toggle">Текущий прогресс</button>
+      </div>
+      <div class="chart-area">
+        <canvas id="progressChart"></canvas>
+      </div>
+    </section>
+    {% endif %}
+  </main>
+
+  <footer class="container footer">
+    <small>Совет: делай по одному шагу. Видимый прогресс мотивирует.</small>
+  </footer>
+</body>
+</html>

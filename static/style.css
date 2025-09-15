@@ -1,0 +1,187 @@
+:root {
+  --bg: #f7f7f7;
+  --card: #ffffff;
+  --text: #111111;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --accent: #0a84ff; /* iOS blue */
+  --accent2: #34c759; /* iOS green */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0b0c;
+    --card: #111113;
+    --text: #f5f5f7;
+    --muted: #a1a1aa;
+    --border: #1f2937;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Inter, Roboto, Segoe UI, Helvetica, Arial, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.container {
+  max-width: 860px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+
+header h1 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03), 0 8px 40px rgba(0,0,0,0.04);
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.inline-form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+label { color: var(--muted); }
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 12px;
+  min-width: 140px;
+  outline: none;
+}
+input[type="number"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(10,132,255,0.15);
+}
+
+button {
+  border: none;
+  background: #e5e7eb;
+  color: #111827;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform .02s ease, filter .2s ease, box-shadow .2s ease;
+}
+button:hover { filter: brightness(0.98); }
+button:active { transform: translateY(1px); }
+
+button.primary {
+  background: linear-gradient(180deg, var(--accent), #0066cc);
+  color: white;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 6px 20px rgba(10,132,255,0.35);
+}
+
+.progress {
+  margin-top: 20px;
+  padding: 16px 0;
+}
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.progress-bar {
+  margin: 8px 0;
+}
+.progress-footer {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  margin-top: 12px;
+}
+
+.progress-bar {
+  position: relative;
+  height: 18px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+@media (prefers-color-scheme: dark) {
+  .progress-bar { background: #222; }
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  border-right: 1px solid rgba(255,255,255,0.5);
+  transition: width .3s ease;
+}
+
+.chart { margin-top: 20px; }
+
+/* Stable container for Chart.js to prevent resize feedback loops */
+.chart-area {
+  position: relative;
+  width: 100%;
+  height: 260px; /* fixed height for responsive charts */
+}
+.chart-area canvas {
+  display: block; /* remove inline-gap and ensure block sizing */
+}
+
+.chart-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  justify-content: center;
+}
+
+.chart-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.chart-toggle:hover {
+  background: var(--border);
+}
+
+.chart-toggle.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.footer { color: var(--muted); margin-bottom: 32px; }
