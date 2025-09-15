@@ -92,13 +92,16 @@
         maintainAspectRatio: false,
         scales: {
           x: {
-            type: 'time',
-            time: { unit: 'day' },
+            type: 'linear',
             grid: { display: false },
-            ticks: { display: true, color: getCss('--muted') },
+            ticks: {
+              display: true,
+              color: getCss('--muted'),
+              callback: (value) => `${value} мин`
+            },
             title: {
               display: true,
-              text: 'Время',
+              text: 'Минуты',
               color: getCss('--muted')
             },
           },

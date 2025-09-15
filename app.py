@@ -71,22 +71,25 @@ def create_app() -> Flask:
         events = storage.get_events()
         points = []
         cumulative = 0
+        first_ts = events[0] if events else 0
         for ts in sorted(events):
             cumulative += 1
+            minutes_elapsed = (ts - first_ts) / 60000.0  # Convert ms to minutes
             points.append({
-                't': ts,
+                't': minutes_elapsed,
                 'y': cumulative,
             })
 
         # Projection
-        rate_per_day, eta_iso = _compute_rate_and_eta(total, events)
+        rate_per_day, eta_ms = _compute_rate_and_eta(total, events)
         projection = None
-        if eta_iso and len(points) > 0:
+        if eta_ms and len(points) > 0:
             last = points[-1]
+            eta_minutes = (eta_ms - first_ts) / 60000.0
             projection = {
                 'from': last,
                 'to': {
-                    't': eta_iso,
+                    't': eta_minutes,
                     'y': total,
                 }
             }
@@ -94,7 +97,7 @@ def create_app() -> Flask:
         return jsonify({
             'points': points,
             'total': total,
-            'eta': eta_iso,
+            'eta': eta_ms,
             'rate_per_day': rate_per_day,
             'projection': projection,
         })
