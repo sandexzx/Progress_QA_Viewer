@@ -7,6 +7,8 @@
   let chartData = null;
   let currentMode = localStorage.getItem('chartMode') || 'full'; // 'full' or 'current'
 
+
+
   const fullBtn = document.getElementById('fullChartBtn');
   const currentBtn = document.getElementById('currentChartBtn');
 
@@ -101,6 +103,9 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+          padding: { top: 18, right: 24 }
+        },
         scales: {
           x: {
             type: 'linear',
@@ -131,6 +136,24 @@
         plugins: {
           legend: { display: false },
           tooltip: { mode: 'index', intersect: false },
+          annotation: mode === 'full' && chartData.eta ? {
+            annotations: {
+              etaLabel: {
+                type: 'label',
+                xValue: chartData.projection.to.t,
+                yValue: target,
+                content: new Date(chartData.eta).toLocaleString('ru-RU'),
+                backgroundColor: 'rgba(52, 199, 89, 0.8)',
+                color: 'white',
+                font: { size: 12 },
+                padding: 4,
+                cornerRadius: 4,
+                position: 'center',
+                xAdjust: -60,
+                yAdjust: 10,
+              }
+            }
+          } : {},
         },
         elements: { point: { radius: 2 } },
       }
