@@ -5,7 +5,7 @@
   const ctx = el.getContext('2d');
   let chartInstance = null;
   let chartData = null;
-  let currentMode = 'full'; // 'full' or 'current'
+  let currentMode = localStorage.getItem('chartMode') || 'full'; // 'full' or 'current'
 
   const fullBtn = document.getElementById('fullChartBtn');
   const currentBtn = document.getElementById('currentChartBtn');
@@ -18,6 +18,7 @@
 
       fullBtn.addEventListener('click', () => {
         currentMode = 'full';
+        localStorage.setItem('chartMode', currentMode);
         fullBtn.classList.add('active');
         currentBtn.classList.remove('active');
         createChart(currentMode);
@@ -25,10 +26,20 @@
 
       currentBtn.addEventListener('click', () => {
         currentMode = 'current';
+        localStorage.setItem('chartMode', currentMode);
         currentBtn.classList.add('active');
         fullBtn.classList.remove('active');
         createChart(currentMode);
       });
+
+      // Set initial active classes based on currentMode
+      if (currentMode === 'full') {
+        fullBtn.classList.add('active');
+        currentBtn.classList.remove('active');
+      } else {
+        currentBtn.classList.add('active');
+        fullBtn.classList.remove('active');
+      }
     })
     .catch(() => {});
 
