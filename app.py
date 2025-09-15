@@ -31,7 +31,11 @@ def create_app() -> Flask:
             pct = 100.0
 
         # Stats
-        rate_per_day, eta_iso = _compute_rate_and_eta(total, events)
+        rate_per_day, eta_ms = _compute_rate_and_eta(total, events)
+        if eta_ms:
+            eta_date = datetime.fromtimestamp(eta_ms / 1000.0, tz=timezone.utc).date().isoformat()
+        else:
+            eta_date = None
 
         return render_template(
             'index.html',
@@ -40,7 +44,7 @@ def create_app() -> Flask:
             remaining=remaining,
             pct=pct,
             rate_per_day=rate_per_day,
-            eta_iso=eta_iso,
+            eta_iso=eta_date,
         )
 
     @app.route('/set_total', methods=['POST'])
@@ -70,7 +74,7 @@ def create_app() -> Flask:
         for ts in sorted(events):
             cumulative += 1
             points.append({
-                't': _to_iso(ts),
+                't': ts,
                 'y': cumulative,
             })
 
@@ -128,7 +132,8 @@ def create_app() -> Flask:
 
         days_remaining = remaining / rate_per_day
         eta_dt = datetime.now(timezone.utc) + timedelta(days=days_remaining)
-        return (round(rate_per_day, 2), eta_dt.isoformat())
+        eta_ms = int(eta_dt.timestamp() * 1000)
+        return (round(rate_per_day, 2), eta_ms)
 
     def _to_iso(ts_ms: int) -> str:
         return datetime.fromtimestamp(ts_ms / 1000.0, tz=timezone.utc).isoformat()

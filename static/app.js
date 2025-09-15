@@ -95,13 +95,23 @@
             type: 'time',
             time: { unit: 'day' },
             grid: { display: false },
-            ticks: { color: getCss('--muted') },
+            ticks: { display: true, color: getCss('--muted') },
+            title: {
+              display: true,
+              text: 'Время',
+              color: getCss('--muted')
+            },
           },
           y: {
             beginAtZero: true,
             suggestedMax,
             grid: { color: 'rgba(0,0,0,0.06)' },
             ticks: { color: getCss('--muted') },
+            title: {
+              display: true,
+              text: 'Количество',
+              color: getCss('--muted')
+            },
           },
         },
         plugins: {
