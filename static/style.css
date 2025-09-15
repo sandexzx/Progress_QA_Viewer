@@ -81,6 +81,11 @@ input[type="number"] {
   min-width: 140px;
   outline: none;
 }
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 input[type="number"]:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(10,132,255,0.15);
