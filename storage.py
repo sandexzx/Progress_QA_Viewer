@@ -22,14 +22,16 @@ class Storage:
     def _read(self) -> Dict[str, Any]:
         with self._lock:
             if not os.path.exists(self.path):
-                return {'total': 0, 'events': []}
+                return {'total': 0, 'events': [], 'daily_goal': 10, 'daily_progress': {}}
             with open(self.path, 'r', encoding='utf-8') as f:
                 try:
                     data = json.load(f)
                 except json.JSONDecodeError:
-                    data = {'total': 0, 'events': []}
+                    data = {'total': 0, 'events': [], 'daily_goal': 10, 'daily_progress': {}}
         data.setdefault('total', 0)
         data.setdefault('events', [])
+        data.setdefault('daily_goal', 10)
+        data.setdefault('daily_progress', {})
         return data
 
     def _write(self, data: Dict[str, Any]):
@@ -56,5 +58,30 @@ class Storage:
         events.append(int(ts_ms))
         events.sort()
         data['events'] = events
+
+        # Update daily progress
+        from datetime import datetime, timezone
+        dt = datetime.fromtimestamp(ts_ms / 1000.0, tz=timezone.utc)
+        date_str = dt.date().isoformat()
+        daily_progress = data.get('daily_progress', {})
+        daily_progress[date_str] = daily_progress.get(date_str, 0) + 1
+        data['daily_progress'] = daily_progress
+
         self._write(data)
+
+    def get_daily_goal(self) -> int:
+        return int(self._read().get('daily_goal', 10))
+
+    def set_daily_goal(self, goal: int):
+        data = self._read()
+        data['daily_goal'] = int(goal)
+        self._write(data)
+
+    def get_daily_progress(self, date_str: str) -> int:
+        return int(self._read().get('daily_progress', {}).get(date_str, 0))
+
+    def get_today_progress(self) -> int:
+        from datetime import datetime, timezone
+        today = datetime.now(timezone.utc).date().isoformat()
+        return self.get_daily_progress(today)
 

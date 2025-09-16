@@ -175,4 +175,19 @@
       }
     });
   }
+
+  // Circular progress animation
+  const circularProgress = document.querySelector('.circular-progress');
+  if (circularProgress) {
+    const progressCircle = circularProgress.querySelector('.progress-circle');
+    if (progressCircle) {
+      // Get initial progress from data attribute or calculate
+      const initialOffset = progressCircle.getAttribute('stroke-dashoffset');
+      // Animate from 0 to current value
+      progressCircle.style.strokeDashoffset = '314.16';
+      setTimeout(() => {
+        progressCircle.style.strokeDashoffset = initialOffset;
+      }, 100);
+    }
+  }
 })();

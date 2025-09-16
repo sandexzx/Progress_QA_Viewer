@@ -37,6 +37,11 @@ def create_app() -> Flask:
         else:
             eta_date = None
 
+        # Daily goal stats
+        daily_goal = storage.get_daily_goal()
+        today_progress = storage.get_today_progress()
+        daily_pct = (today_progress / daily_goal * 100.0) if daily_goal > 0 else 0.0
+
         return render_template(
             'index.html',
             total=total,
@@ -45,6 +50,9 @@ def create_app() -> Flask:
             pct=pct,
             rate_per_day=rate_per_day,
             eta_iso=eta_date,
+            daily_goal=daily_goal,
+            today_progress=today_progress,
+            daily_pct=daily_pct,
         )
 
     @app.route('/set_total', methods=['POST'])

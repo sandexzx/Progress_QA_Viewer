@@ -35,11 +35,21 @@ body {
   padding: 0 16px;
 }
 
+/* Wider container for two-column main layout */
+.container-wide {
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+
 header h1 {
   margin: 0;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
+
+/* Center standalone texts (header/title and footer) */
+header.container { text-align: center; }
 
 .subtitle {
   color: var(--muted);
@@ -54,12 +64,40 @@ header h1 {
   box-shadow: 0 1px 2px rgba(0,0,0,0.03), 0 8px 40px rgba(0,0,0,0.04);
 }
 
+/* Two-column layout: sidebar + main */
+.layout-row {
+  display: flex;
+  gap: 16px; /* compact gap to ‘пристыковать’ */
+  align-items: flex-start;
+  justify-content: center; /* center the pair */
+}
+
+/* Daily sidebar in top-left */
+.daily-sidebar-top {
+  position: static;
+  width: 240px;
+  flex: 0 0 240px;
+}
+
+/* Main layout takes remaining width */
+.main-layout {
+  flex: 0 1 860px; /* occupy content width, not stretch */
+  min-width: 0;
+}
+
+.main-content {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto; /* center inner card */
+}
+
 .controls {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 16px;
 }
 
 .inline-form {
@@ -196,4 +234,67 @@ button.reset:hover { filter: brightness(0.9); }
   border-color: var(--accent);
 }
 
-.footer { color: var(--muted); margin-bottom: 32px; }
+.footer { color: var(--muted); margin-bottom: 32px; text-align: center; }
+
+/* Daily Progress Styles */
+.daily-progress {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.daily-progress h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.circular-progress-container {
+  position: relative;
+  display: inline-block;
+  margin: 20px 0;
+}
+
+.circular-progress {
+  transform: rotate(-90deg);
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.progress-circle {
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.progress-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+.progress-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* Responsive design for mobile devices */
+@media (max-width: 768px) {
+  .layout-row {
+    flex-direction: column;
+    }
+
+  .daily-sidebar-top {
+    width: 100%;
+    margin-bottom: 24px;
+  }
+
+  .container, .container-wide { padding: 0 12px; }
+}
