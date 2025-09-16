@@ -321,6 +321,57 @@ button.reset:hover { filter: brightness(0.9); }
   margin-top: 4px;
 }
 
+/* Activity Calendar Styles */
+.activity-calendar {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.activity-calendar h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: 16px repeat(5, 10px); /* left labels + 5 weeks */
+  grid-template-rows: 16px repeat(7, 10px);    /* top labels + 7 days */
+  gap: 2px;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.calendar-label {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1;
+  user-select: none;
+  align-self: center;
+  justify-self: center;
+}
+
+.calendar-corner { /* empty corner cell */ }
+
+.calendar-day {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background-color: var(--border);
+  transition: background-color 0.2s ease;
+}
+
+.calendar-day.active {
+  background-color: var(--accent2);
+}
+
+.calendar-day.active[data-count="1"] { background-color: #9be9a8; }
+.calendar-day.active[data-count="2"] { background-color: #40c463; }
+.calendar-day.active[data-count="3"] { background-color: #30a14e; }
+.calendar-day.active[data-count="4"] { background-color: #216e39; }
+.calendar-day.active[data-count="5"] { background-color: #0f5132; }
+
 /* Responsive design for mobile devices */
 @media (max-width: 768px) {
   .layout-row {
@@ -333,4 +384,19 @@ button.reset:hover { filter: brightness(0.9); }
   }
 
   .container, .container-wide { padding: 0 12px; }
+
+  .calendar-grid {
+    grid-template-columns: 14px repeat(5, 8px);
+    grid-template-rows: 14px repeat(7, 8px);
+    gap: 1px;
+  }
+
+  .calendar-day {
+    width: 8px;
+    height: 8px;
+  }
+
+  .calendar-label {
+    font-size: 9px;
+  }
 }

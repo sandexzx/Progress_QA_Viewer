@@ -11,6 +11,9 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
   <script defer src="/static/app.js"></script>
+  <script>
+    window.calendarData = {{ calendar_data|tojson }};
+  </script>
   <meta name="color-scheme" content="light dark">
   <style>
     /* Optional: prefer SF font on Apple devices */
@@ -27,8 +30,8 @@
 
   <main class="container-wide">
   <div class="layout-row">
-    <aside class="daily-sidebar-top card">
-      <section class="daily-progress">
+    <aside class="daily-sidebar-top">
+      <section class="daily-progress card">
         <h3>Дневная цель</h3>
         <div class="circular-progress-container">
           <svg class="circular-progress" width="120" height="120" viewBox="0 0 120 120">
@@ -42,6 +45,11 @@
             <div class="progress-label">вопросов</div>
           </div>
         </div>
+      </section>
+
+      <section class="activity-calendar card">
+        <h3>Активность</h3>
+        <div id="calendar" class="calendar-grid"></div>
       </section>
     </aside>
 

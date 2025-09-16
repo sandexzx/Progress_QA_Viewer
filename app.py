@@ -46,6 +46,9 @@ def create_app() -> Flask:
         today_progress = storage.get_today_progress()
         daily_pct = (today_progress / daily_goal * 100.0) if daily_goal > 0 else 0.0
 
+        # Calendar data: last 365 days with activity
+        calendar_data = _get_calendar_data(events)
+
         return render_template(
             'index.html',
             total=total,
@@ -59,6 +62,7 @@ def create_app() -> Flask:
             daily_pct=daily_pct,
             milestones=milestones,
             achieved_milestones=achieved_milestones,
+            calendar_data=calendar_data,
         )
 
     @app.route('/set_total', methods=['POST'])
@@ -154,6 +158,35 @@ def create_app() -> Flask:
 
     def _to_iso(ts_ms: int) -> str:
         return datetime.fromtimestamp(ts_ms / 1000.0, tz=timezone.utc).isoformat()
+
+    def _get_calendar_data(events: List[int]) -> List[Dict[str, Any]]:
+        from collections import defaultdict
+        from datetime import timedelta
+
+        if not events:
+            return []
+
+        # Group events by date
+        date_counts = defaultdict(int)
+        for ts_ms in events:
+            dt = datetime.fromtimestamp(ts_ms / 1000.0, tz=timezone.utc)
+            date_str = dt.date().isoformat()
+            date_counts[date_str] += 1
+
+        # Get last 365 days
+        today = datetime.now(timezone.utc).date()
+        start_date = today - timedelta(days=364)  # 365 days including today
+
+        calendar_data = []
+        current_date = start_date
+        while current_date <= today:
+            date_str = current_date.isoformat()
+            count = date_counts.get(date_str, 0)
+            if count > 0:
+                calendar_data.append({'date': date_str, 'count': count})
+            current_date += timedelta(days=1)
+
+        return calendar_data
 
     return app
 

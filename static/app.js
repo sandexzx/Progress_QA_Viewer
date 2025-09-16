@@ -214,4 +214,90 @@
     createConfetti();
     localStorage.setItem('achieved_milestones', JSON.stringify(currentAchieved));
   }
+
+  // Render activity calendar
+  renderCalendar();
 })();
+
+function renderCalendar() {
+  const calendarEl = document.getElementById('calendar');
+  if (!calendarEl || !window.calendarData) return;
+
+  const data = window.calendarData;
+  const activityMap = {};
+  data.forEach(item => {
+    activityMap[item.date] = item.count;
+  });
+
+  // We render a compact 7x5 grid (7 days x 5 weeks)
+  // Week 1 is the week when the first activity started.
+  const activeDates = Object.keys(activityMap).sort();
+  // Determine start Monday in UTC
+  let startMonday;
+  if (activeDates.length > 0) {
+    const first = new Date(activeDates[0] + 'T00:00:00Z');
+    startMonday = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth(), first.getUTCDate()));
+    let dow = startMonday.getUTCDay(); // 0=Sun
+    if (dow === 0) dow = 7; // make Sunday=7
+    startMonday.setUTCDate(startMonday.getUTCDate() - (dow - 1)); // back to Monday
+  } else {
+    // Fallback: current week Monday (UTC)
+    const today = new Date();
+    const utc = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+    let dow = utc.getUTCDay();
+    if (dow === 0) dow = 7;
+    utc.setUTCDate(utc.getUTCDate() - (dow - 1));
+    startMonday = utc;
+  }
+
+  const days = [];
+  for (let i = 0; i < 35; i++) {
+    const d = new Date(startMonday);
+    d.setUTCDate(startMonday.getUTCDate() + i);
+    const dateStr = d.toISOString().split('T')[0];
+    const count = activityMap[dateStr] || 0;
+    days.push({ date: dateStr, count });
+  }
+
+  // Build nodes for a labeled grid (extra top row and left column)
+  // First row: corner + week labels
+  const nodes = [];
+  nodes.push(createCorner());
+  for (let w = 0; w < 5; w++) {
+    const label = document.createElement('div');
+    label.className = 'calendar-label week-label';
+    label.textContent = String(w + 1); // Weeks 1..5
+    nodes.push(label);
+  }
+
+  const dayNames = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+
+  // Remaining rows: day label + 5 cells each
+  for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+    const dayLabel = document.createElement('div');
+    dayLabel.className = 'calendar-label day-label';
+    dayLabel.textContent = dayNames[dayOfWeek];
+    nodes.push(dayLabel);
+
+    for (let week = 0; week < 5; week++) {
+      const index = week * 7 + dayOfWeek;
+      const dayData = days[index];
+      const div = document.createElement('div');
+      div.className = 'calendar-day';
+      if (dayData && dayData.count > 0) {
+        div.classList.add('active');
+        div.setAttribute('data-count', Math.min(dayData.count, 5));
+      }
+      nodes.push(div);
+    }
+  }
+
+  calendarEl.innerHTML = '';
+  nodes.forEach(n => calendarEl.appendChild(n));
+}
+
+function createCorner() {
+  const d = document.createElement('div');
+  d.className = 'calendar-corner';
+  return d;
+}
