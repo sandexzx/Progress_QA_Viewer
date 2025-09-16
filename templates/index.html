@@ -53,7 +53,7 @@
       </section>
     </aside>
 
-    <main class="main-layout">
+    <section class="main-layout">
       <div class="main-content card">
       <section class="progress">
         <div class="controls">
@@ -105,7 +105,26 @@
       </section>
       {% endif %}
       </div>
-    </main>
+    </section>
+
+    <aside class="pomodoro-sidebar">
+      <section class="pomodoro-timer card">
+        <h3>Pomodoro Таймер</h3>
+        <div class="timer-display">
+          <div id="timer" class="timer-text">25:00</div>
+          <div id="phase" class="phase-text">Работа</div>
+        </div>
+        <div class="timer-controls">
+          <button id="startBtn" class="timer-btn primary">Старт</button>
+          <button id="pauseBtn" class="timer-btn">Пауза</button>
+          <button id="resetTimerBtn" class="timer-btn reset">Сброс</button>
+        </div>
+        <div class="pomodoro-stats">
+          <div>Работа: <span id="workCount">0</span></div>
+          <div>Отдых: <span id="breakCount">0</span></div>
+        </div>
+      </section>
+    </aside>
   </div>
   </main>
 
