@@ -155,7 +155,7 @@ button.reset {
 button.reset:hover { filter: brightness(0.9); }
 
 .progress {
-  margin-top: 20px;
+  margin-top: 0;
   padding: 16px 0;
 }
 .progress-header {
@@ -274,7 +274,8 @@ button.reset:hover { filter: brightness(0.9); }
 
 /* Daily Progress Styles */
 .daily-progress {
-  margin-top: 24px;
+  /* Remove top offset so its card aligns with main card */
+  margin-top: 0;
   text-align: center;
 }
 
