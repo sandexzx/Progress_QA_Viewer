@@ -30,6 +30,10 @@ def create_app() -> Flask:
         if pct > 100:
             pct = 100.0
 
+        # Milestones
+        milestones = [25, 50, 75, 100]
+        achieved_milestones = [m for m in milestones if pct >= m]
+
         # Stats
         rate_per_day, eta_ms = _compute_rate_and_eta(total, events)
         if eta_ms:
@@ -53,6 +57,8 @@ def create_app() -> Flask:
             daily_goal=daily_goal,
             today_progress=today_progress,
             daily_pct=daily_pct,
+            milestones=milestones,
+            achieved_milestones=achieved_milestones,
         )
 
     @app.route('/set_total', methods=['POST'])

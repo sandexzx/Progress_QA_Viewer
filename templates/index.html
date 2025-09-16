@@ -63,9 +63,14 @@
         </div>
 
         <div class="progress-header">
-          <div><strong>{{ completed }}</strong> из <strong>{{ total }}</strong></div>
-          <div>{{ '%.1f' % pct }}%</div>
-        </div>
+           <div><strong>{{ completed }}</strong> из <strong>{{ total }}</strong></div>
+           <div>{{ '%.1f' % pct }}%</div>
+         </div>
+         <div class="milestones">
+           {% for m in milestones %}
+             <span class="milestone-badge {% if m in achieved_milestones %}achieved{% endif %}" data-milestone="{{ m }}">{{ m }}%</span>
+           {% endfor %}
+         </div>
         <div class="progress-bar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ '%.1f' % pct }}">
           <div class="progress-fill" style="width: {{ pct }}%"></div>
         </div>

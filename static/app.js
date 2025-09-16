@@ -190,4 +190,28 @@
       }, 100);
     }
   }
+
+  // Milestone confetti animation
+  function createConfetti() {
+    const container = document.body;
+    for (let i = 0; i < 30; i++) { // Reduced to 30 for lighter animation
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.left = Math.random() * 100 + 'vw';
+      confetti.style.animationDelay = Math.random() * 2 + 's';
+      confetti.style.backgroundColor = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#f0932b'][Math.floor(Math.random() * 5)];
+      container.appendChild(confetti);
+      setTimeout(() => confetti.remove(), 3000);
+    }
+  }
+
+  // Check for new milestones and trigger confetti
+  const badges = document.querySelectorAll('.milestone-badge.achieved');
+  const currentAchieved = Array.from(badges).map(b => parseInt(b.dataset.milestone));
+  const stored = JSON.parse(localStorage.getItem('achieved_milestones') || '[]');
+  const newMilestones = currentAchieved.filter(m => !stored.includes(m));
+  if (newMilestones.length > 0) {
+    createConfetti();
+    localStorage.setItem('achieved_milestones', JSON.stringify(currentAchieved));
+  }
 })();
