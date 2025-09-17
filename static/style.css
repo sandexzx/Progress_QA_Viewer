@@ -445,12 +445,16 @@ button.reset:hover { filter: brightness(0.9); }
 
 .timer-controls {
   display: flex;
+  flex-wrap: wrap;
+  width: 100%;
   gap: 8px;
   justify-content: center;
   margin: 16px 0;
 }
 
 .timer-btn {
+  flex: 1 1 110px;
+  min-width: 0;
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 14px;
