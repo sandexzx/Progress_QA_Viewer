@@ -75,35 +75,35 @@ header.container { text-align: center; }
 /* Daily sidebar in top-left */
 .daily-sidebar-top {
   position: static;
-  width: 240px;
-  flex: 0 0 240px;
+  width: 220px;
+  flex: 0 0 220px;
 }
 
 /* Pomodoro sidebar in top-right */
 .pomodoro-sidebar {
   position: static;
-  width: 240px;
-  flex: 0 0 240px;
+  width: 220px;
+  flex: 0 0 220px;
 }
 
 /* Main layout takes remaining width */
 .main-layout {
-  flex: 0 1 860px; /* occupy content width, not stretch */
+  flex: 1 1 720px; /* fluid main column that can shrink/grow */
   min-width: 0;
 }
 
 .main-content {
   width: 100%;
-  max-width: 860px;
+  max-width: 760px; /* keep inner content compact */
   margin: 0 auto; /* center inner card */
 }
 
 .controls {
   display: flex;
-  gap: 12px;
+  gap: 12px 16px;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start; /* keep controls grouped neatly */
   margin-bottom: 16px;
 }
 
@@ -147,6 +147,10 @@ button {
 }
 button:hover { filter: brightness(0.98); }
 button:active { transform: translateY(1px); }
+
+@media (prefers-color-scheme: dark) {
+  button { background: #222; color: var(--text); }
+}
 
 button.primary {
   background: linear-gradient(180deg, var(--accent), #0066cc);

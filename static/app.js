@@ -1,162 +1,188 @@
 (() => {
-  // Chart block (guarded so the rest of the script still runs)
-  const el = document.getElementById('progressChart');
-  if (el) {
-    const ctx = el.getContext('2d');
-    let chartInstance = null;
-    let chartData = null;
-    let currentMode = localStorage.getItem('chartMode') || 'full'; // 'full' or 'current'
+  const DASH_LENGTH = 314.16;
 
-    const fullBtn = document.getElementById('fullChartBtn');
-    const currentBtn = document.getElementById('currentChartBtn');
+  // Chart setup
+  const chartSection = document.getElementById('chartSection');
+  const chartCanvas = document.getElementById('progressChart');
+  const chartCtx = chartCanvas ? chartCanvas.getContext('2d') : null;
+  const fullBtn = document.getElementById('fullChartBtn');
+  const currentBtn = document.getElementById('currentChartBtn');
+  let chartInstance = null;
+  let chartData = null;
+  let currentMode = localStorage.getItem('chartMode') || 'full';
 
-    fetch('/chart-data')
-      .then(r => r.json())
-      .then(data => {
-        chartData = data;
-        createChart(currentMode);
+  if (fullBtn && currentBtn) {
+    fullBtn.addEventListener('click', () => setChartMode('full'));
+    currentBtn.addEventListener('click', () => setChartMode('current'));
+    setActiveChartButton();
+  }
 
-        fullBtn.addEventListener('click', () => {
-          currentMode = 'full';
-          localStorage.setItem('chartMode', currentMode);
-          fullBtn.classList.add('active');
-          currentBtn.classList.remove('active');
-          createChart(currentMode);
-        });
+  if (chartSection && chartSection.dataset.hasData === 'true') {
+    showChartSection();
+    refreshChartData();
+  }
 
-        currentBtn.addEventListener('click', () => {
-          currentMode = 'current';
-          localStorage.setItem('chartMode', currentMode);
-          currentBtn.classList.add('active');
-          fullBtn.classList.remove('active');
-          createChart(currentMode);
-        });
-
-        // Set initial active classes based on currentMode
-        if (currentMode === 'full') {
-          fullBtn.classList.add('active');
-          currentBtn.classList.remove('active');
-        } else {
-          currentBtn.classList.add('active');
-          fullBtn.classList.remove('active');
+  async function refreshChartData() {
+    if (!chartCanvas) {
+      return;
+    }
+    try {
+      const response = await fetch('/chart-data');
+      if (!response.ok) {
+        throw new Error('Failed to load chart data');
+      }
+      chartData = await response.json();
+      if (Array.isArray(chartData.points) && chartData.points.length > 0) {
+        if (chartSection) {
+          chartSection.dataset.hasData = 'true';
+          showChartSection();
         }
-      })
-      .catch(() => {});
-
-    function createChart(mode) {
-      if (chartInstance) {
+        requestAnimationFrame(() => createChart(currentMode));
+      } else if (chartInstance) {
         chartInstance.destroy();
-        ctx.clearRect(0, 0, el.width, el.height);
+        chartInstance = null;
       }
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
-      const series = chartData.points.map(p => ({ x: p.t, y: p.y }));
-      const datasets = [];
+  function setChartMode(mode) {
+    currentMode = mode;
+    localStorage.setItem('chartMode', currentMode);
+    setActiveChartButton();
+    if (chartData && chartCanvas && (!chartSection || !chartSection.hasAttribute('hidden'))) {
+      createChart(currentMode);
+    }
+  }
 
-      if (series.length) {
-        datasets.push({
-          label: 'Закрыто',
-          data: series,
-          borderColor: '#0a84ff',
-          backgroundColor: 'rgba(10,132,255,0.08)',
-          tension: 0.25,
-          fill: true,
-          pointRadius: 2,
-          borderWidth: 2,
-          parsing: true,
-        });
-      }
+  function setActiveChartButton() {
+    if (!fullBtn || !currentBtn) return;
+    fullBtn.classList.toggle('active', currentMode === 'full');
+    currentBtn.classList.toggle('active', currentMode === 'current');
+  }
 
-      if (mode === 'full' && chartData.projection) {
-        const from = chartData.projection.from;
-        const to = chartData.projection.to;
-        const projSeries = [
+  function showChartSection() {
+    if (!chartSection) return;
+    if (chartSection.hasAttribute('hidden')) {
+      chartSection.removeAttribute('hidden');
+    }
+  }
+
+  function createChart(mode) {
+    if (!chartCtx || !chartData) return;
+
+    if (chartInstance) {
+      chartInstance.destroy();
+      chartCtx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
+    }
+
+    const series = Array.isArray(chartData.points)
+      ? chartData.points.map(p => ({ x: p.t, y: p.y }))
+      : [];
+    if (!series.length) {
+      return;
+    }
+
+    const datasets = [{
+      label: 'Закрыто',
+      data: series,
+      borderColor: '#0a84ff',
+      backgroundColor: 'rgba(10,132,255,0.08)',
+      tension: 0.25,
+      fill: true,
+      pointRadius: 2,
+      borderWidth: 2,
+      parsing: true,
+    }];
+
+    const hasProjection = mode === 'full' && chartData.projection && chartData.projection.to;
+    if (hasProjection) {
+      const from = chartData.projection.from;
+      const to = chartData.projection.to;
+      datasets.push({
+        label: 'Прогноз',
+        data: [
           { x: from.t, y: from.y },
           { x: to.t, y: to.y },
-        ];
-
-        datasets.push({
-          label: 'Прогноз',
-          data: projSeries,
-          borderColor: '#34c759',
-          backgroundColor: 'transparent',
-          tension: 0,
-          fill: false,
-          pointRadius: 0,
-          borderDash: [6, 6],
-          borderWidth: 2,
-        });
-      }
-
-      const target = chartData.total;
-      let suggestedMax;
-      if (mode === 'full') {
-        suggestedMax = Math.max(target || 0, (series[series.length - 1]?.y || 0) + 2);
-      } else {
-        suggestedMax = (series[series.length - 1]?.y || 0) + 2;
-      }
-
-      chartInstance = new Chart(ctx, {
-        type: 'line',
-        data: { datasets },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          layout: {
-            padding: { top: 18, right: 24 }
-          },
-          scales: {
-            x: {
-              type: 'linear',
-              grid: { display: false },
-              ticks: {
-                display: true,
-                color: getCss('--muted'),
-                callback: (value) => `${value} мин`
-              },
-              title: {
-                display: true,
-                text: 'Минуты',
-                color: getCss('--muted')
-              },
-            },
-            y: {
-              beginAtZero: true,
-              suggestedMax,
-              grid: { color: getCss('--border') },
-              ticks: { color: getCss('--muted') },
-              title: {
-                display: true,
-                text: 'Количество',
-                color: getCss('--muted')
-              },
-            },
-          },
-          plugins: {
-            legend: { display: false },
-            tooltip: { mode: 'index', intersect: false },
-            annotation: mode === 'full' && chartData.eta ? {
-              annotations: {
-                etaLabel: {
-                  type: 'label',
-                  xValue: chartData.projection.to.t,
-                  yValue: target,
-                  content: new Date(chartData.eta).toLocaleString('ru-RU'),
-                  backgroundColor: 'rgba(52, 199, 89, 0.8)',
-                  color: 'white',
-                  font: { size: 12 },
-                  padding: 4,
-                  cornerRadius: 4,
-                  position: 'center',
-                  xAdjust: -60,
-                  yAdjust: 10,
-                }
-              }
-            } : {},
-          },
-          elements: { point: { radius: 2 } },
-        }
+        ],
+        borderColor: '#34c759',
+        backgroundColor: 'transparent',
+        tension: 0,
+        fill: false,
+        pointRadius: 0,
+        borderDash: [6, 6],
+        borderWidth: 2,
       });
     }
+
+    const target = chartData.total;
+    const lastY = series[series.length - 1]?.y || 0;
+    const suggestedMax = mode === 'full'
+      ? Math.max(target || 0, lastY + 2)
+      : lastY + 2;
+
+    chartInstance = new Chart(chartCtx, {
+      type: 'line',
+      data: { datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+          padding: { top: 18, right: 24 },
+        },
+        scales: {
+          x: {
+            type: 'linear',
+            grid: { display: false },
+            ticks: {
+              display: true,
+              color: getCss('--muted'),
+              callback: value => `${value} мин`,
+            },
+            title: {
+              display: true,
+              text: 'Минуты',
+              color: getCss('--muted'),
+            },
+          },
+          y: {
+            beginAtZero: true,
+            suggestedMax,
+            grid: { color: getCss('--border') },
+            ticks: { color: getCss('--muted') },
+            title: {
+              display: true,
+              text: 'Количество',
+              color: getCss('--muted'),
+            },
+          },
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: { mode: 'index', intersect: false },
+          annotation: hasProjection && chartData.eta ? {
+            annotations: {
+              etaLabel: {
+                type: 'label',
+                xValue: chartData.projection.to.t,
+                yValue: target,
+                content: new Date(chartData.eta).toLocaleString('ru-RU'),
+                backgroundColor: 'rgba(52, 199, 89, 0.8)',
+                color: 'white',
+                font: { size: 12 },
+                padding: 4,
+                cornerRadius: 4,
+                position: 'center',
+                xAdjust: -60,
+                yAdjust: 10,
+              },
+            },
+          } : {},
+        },
+        elements: { point: { radius: 2 } },
+      },
+    });
   }
 
   function getCss(varName) {
@@ -176,24 +202,19 @@
   }
 
   // Circular progress animation
-  const circularProgress = document.querySelector('.circular-progress');
-  if (circularProgress) {
-    const progressCircle = circularProgress.querySelector('.progress-circle');
-    if (progressCircle) {
-      // Get initial progress from data attribute or calculate
-      const initialOffset = progressCircle.getAttribute('stroke-dashoffset');
-      // Animate from 0 to current value
-      progressCircle.style.strokeDashoffset = '314.16';
-      setTimeout(() => {
-        progressCircle.style.strokeDashoffset = initialOffset;
-      }, 100);
-    }
+  const progressCircle = document.querySelector('.progress-circle');
+  if (progressCircle) {
+    const initialOffset = progressCircle.getAttribute('stroke-dashoffset');
+    progressCircle.style.strokeDashoffset = String(DASH_LENGTH);
+    setTimeout(() => {
+      progressCircle.style.strokeDashoffset = initialOffset;
+    }, 100);
   }
 
-  // Milestone confetti animation
+  // Milestone confetti helpers
   function createConfetti() {
     const container = document.body;
-    for (let i = 0; i < 30; i++) { // Reduced to 30 for lighter animation
+    for (let i = 0; i < 30; i++) {
       const confetti = document.createElement('div');
       confetti.className = 'confetti';
       confetti.style.left = Math.random() * 100 + 'vw';
@@ -204,22 +225,168 @@
     }
   }
 
-  // Check for new milestones and trigger confetti
-  const badges = document.querySelectorAll('.milestone-badge.achieved');
-  const currentAchieved = Array.from(badges).map(b => parseInt(b.dataset.milestone));
-  const stored = JSON.parse(localStorage.getItem('achieved_milestones') || '[]');
-  const newMilestones = currentAchieved.filter(m => !stored.includes(m));
-  if (newMilestones.length > 0) {
-    createConfetti();
+  function syncMilestones(currentAchieved) {
+    const badges = document.querySelectorAll('.milestone-badge');
+    const stored = JSON.parse(localStorage.getItem('achieved_milestones') || '[]');
+    const achievedSet = new Set(currentAchieved || []);
+    const newlyAchieved = [];
+
+    badges.forEach(badge => {
+      const milestone = parseInt(badge.dataset.milestone, 10);
+      if (!Number.isFinite(milestone)) return;
+      if (achievedSet.has(milestone)) {
+        if (!badge.classList.contains('achieved')) {
+          newlyAchieved.push(milestone);
+        }
+        badge.classList.add('achieved');
+      } else {
+        badge.classList.remove('achieved');
+      }
+    });
+
+    const newMilestones = currentAchieved.filter(m => !stored.includes(m));
+    if (newMilestones.length > 0 || newlyAchieved.length > 0) {
+      createConfetti();
+    }
     localStorage.setItem('achieved_milestones', JSON.stringify(currentAchieved));
   }
+
+  const initialAchieved = Array.from(document.querySelectorAll('.milestone-badge.achieved'))
+    .map(badge => parseInt(badge.dataset.milestone, 10))
+    .filter(Number.isFinite);
+  syncMilestones(initialAchieved);
 
   // Render activity calendar
   renderCalendar();
 
+  // Add form handler
+  const addForm = document.getElementById('addForm');
+  if (addForm) {
+    const handleAddSubmit = async (event) => {
+      event.preventDefault();
+      const submitBtn = addForm.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.disabled = true;
+      try {
+        const formData = new FormData(addForm);
+        const response = await fetch(addForm.action, {
+          method: 'POST',
+          body: formData,
+          headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) {
+          throw new Error('Request failed');
+        }
+        const payload = await response.json();
+        applyDashboardUpdate(payload);
+        await refreshChartData();
+      } catch (err) {
+        console.error(err);
+        addForm.removeEventListener('submit', handleAddSubmit);
+        addForm.submit();
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    };
+
+    addForm.addEventListener('submit', handleAddSubmit);
+  }
+
+  function applyDashboardUpdate(payload) {
+    if (!payload || typeof payload !== 'object') return;
+
+    const todayProgress = Number(payload.today_progress ?? 0);
+    const dailyGoal = Number(payload.daily_goal ?? 0);
+    const dailyPct = Number(payload.daily_pct ?? 0);
+    const completed = Number(payload.completed ?? 0);
+    const total = Number(payload.total ?? 0);
+    const pct = Number(payload.pct ?? 0);
+    const remaining = Number(payload.remaining ?? 0);
+    const ratePerDay = payload.rate_per_day ?? 0;
+    const etaIso = payload.eta_iso;
+
+    const progressNumberEl = document.querySelector('.progress-text .progress-number');
+    if (progressNumberEl) {
+      progressNumberEl.textContent = `${todayProgress}/${dailyGoal}`;
+    }
+
+    if (progressCircle) {
+      const clamped = Math.max(0, Math.min(100, dailyPct));
+      const offset = DASH_LENGTH - (clamped / 100) * DASH_LENGTH;
+      progressCircle.style.strokeDashoffset = offset;
+    }
+
+    const headerStrong = document.querySelectorAll('.progress-header strong');
+    if (headerStrong.length >= 2) {
+      headerStrong[0].textContent = completed;
+      headerStrong[1].textContent = total;
+    }
+    const headerPct = document.querySelector('.progress-header > div:last-child');
+    if (headerPct) {
+      const formattedPct = Number.isFinite(pct) ? pct.toFixed(1) : '0.0';
+      headerPct.textContent = `${formattedPct}%`;
+    }
+
+    const progressFill = document.querySelector('.progress-fill');
+    if (progressFill && Number.isFinite(pct)) {
+      const width = Math.max(0, Math.min(100, pct));
+      progressFill.style.width = `${width}%`;
+    }
+
+    const footer = document.querySelector('.progress-footer');
+    if (footer) {
+      const spans = footer.querySelectorAll('span');
+      if (spans[0]) {
+        const strong = spans[0].querySelector('strong');
+        if (strong) {
+          strong.textContent = remaining;
+        } else {
+          spans[0].innerHTML = `Осталось: <strong>${remaining}</strong>`;
+        }
+      }
+      if (spans[1]) {
+        if (etaIso) {
+          spans[1].innerHTML = `ETA: <strong>${etaIso}</strong>`;
+        } else {
+          spans[1].textContent = 'ETA: —';
+        }
+      }
+      if (spans[2]) {
+        const strong = spans[2].querySelector('strong');
+        if (strong) {
+          strong.textContent = ratePerDay;
+        } else {
+          spans[2].innerHTML = `Скорость: <strong>${ratePerDay}</strong>/день`;
+        }
+      }
+    }
+
+    const pageInput = document.getElementById('page');
+    if (pageInput && Object.prototype.hasOwnProperty.call(payload, 'last_page')) {
+      pageInput.value = payload.last_page;
+    }
+    const qInput = document.getElementById('question_number');
+    if (qInput && Object.prototype.hasOwnProperty.call(payload, 'next_question_number')) {
+      qInput.value = payload.next_question_number;
+    }
+
+    if (Array.isArray(payload.achieved_milestones)) {
+      syncMilestones(payload.achieved_milestones);
+    }
+
+    if (Array.isArray(payload.calendar_data)) {
+      window.calendarData = payload.calendar_data;
+      renderCalendar();
+    }
+
+    if (chartSection && completed > 0) {
+      chartSection.dataset.hasData = 'true';
+      showChartSection();
+    }
+  }
+
   // Pomodoro Timer Logic
   let pomodoroTimer = null;
-  let timeLeft = 25 * 60; // 25 minutes in seconds
+  let timeLeft = 25 * 60;
   let isRunning = false;
   let isWorkPhase = true;
   let workCount = 0;
@@ -274,29 +441,27 @@
     if (timeLeft <= 0) {
       if (isWorkPhase) {
         workCount++;
-        timeLeft = 5 * 60; // 5 minutes break
+        timeLeft = 5 * 60;
         isWorkPhase = false;
       } else {
         breakCount++;
-        timeLeft = 25 * 60; // 25 minutes work
+        timeLeft = 25 * 60;
         isWorkPhase = true;
       }
-      // Optional: play sound or show notification
-      // new Audio('/static/notification.mp3').play();
     }
     updateDisplay();
   }
 
-  // Event listeners
   if (startBtn) startBtn.addEventListener('click', startTimer);
   if (pauseBtn) pauseBtn.addEventListener('click', pauseTimer);
   if (resetTimerBtn) resetTimerBtn.addEventListener('click', resetTimer);
 
-  // Initialize display
   updateDisplay();
-  // Initial controls state
   if (startBtn) startBtn.disabled = false;
   if (pauseBtn) pauseBtn.disabled = true;
+
+  // Expose refresh for debugging if needed
+  window.refreshChartData = refreshChartData;
 })();
 
 function renderCalendar() {
@@ -309,19 +474,15 @@ function renderCalendar() {
     activityMap[item.date] = item.count;
   });
 
-  // We render a compact 7x5 grid (7 days x 5 weeks)
-  // Week 1 is the week when the first activity started.
   const activeDates = Object.keys(activityMap).sort();
-  // Determine start Monday in UTC
   let startMonday;
   if (activeDates.length > 0) {
     const first = new Date(activeDates[0] + 'T00:00:00Z');
     startMonday = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth(), first.getUTCDate()));
-    let dow = startMonday.getUTCDay(); // 0=Sun
-    if (dow === 0) dow = 7; // make Sunday=7
-    startMonday.setUTCDate(startMonday.getUTCDate() - (dow - 1)); // back to Monday
+    let dow = startMonday.getUTCDay();
+    if (dow === 0) dow = 7;
+    startMonday.setUTCDate(startMonday.getUTCDate() - (dow - 1));
   } else {
-    // Fallback: current week Monday (UTC)
     const today = new Date();
     const utc = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
     let dow = utc.getUTCDay();
@@ -339,20 +500,17 @@ function renderCalendar() {
     days.push({ date: dateStr, count });
   }
 
-  // Build nodes for a labeled grid (extra top row and left column)
-  // First row: corner + week labels
   const nodes = [];
   nodes.push(createCorner());
   for (let w = 0; w < 5; w++) {
     const label = document.createElement('div');
     label.className = 'calendar-label week-label';
-    label.textContent = String(w + 1); // Weeks 1..5
+    label.textContent = String(w + 1);
     nodes.push(label);
   }
 
   const dayNames = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 
-  // Remaining rows: day label + 5 cells each
   for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
     const dayLabel = document.createElement('div');
     dayLabel.className = 'calendar-label day-label';
