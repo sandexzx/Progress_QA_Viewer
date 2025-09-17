@@ -4,6 +4,8 @@ Progress QA Viewer
 
 Запуск
 
+## Локальный запуск
+
 1) Установите зависимости:
 
    pip install -r requirements.txt
@@ -15,6 +17,54 @@ Progress QA Viewer
 3) Откройте в браузере:
 
    http://localhost:5000/
+
+## Запуск с Docker
+
+### Предварительные требования
+
+Убедитесь, что установлены Docker и Docker Compose:
+
+```bash
+# Проверить установку
+docker --version
+docker compose version
+```
+
+### Запуск приложения
+
+1) Запустите приложение в фоне:
+
+   ```bash
+   sudo docker compose up -d
+   ```
+
+2) Откройте в браузере:
+
+   http://localhost:5000/
+
+### Полезные команды
+
+```bash
+# Проверить статус контейнеров
+sudo docker compose ps
+
+# Посмотреть логи
+sudo docker compose logs
+
+# Остановить приложение
+sudo docker compose down
+
+# Перезапустить
+sudo docker compose restart
+
+# Пересобрать образ
+sudo docker compose up --build -d
+```
+
+### Примечание по правам доступа
+
+- В текущем сеансе используйте `sudo` с Docker командами
+- После перезапуска терминала или выхода/входа в систему права доступа применятся автоматически
 
 Функции
 

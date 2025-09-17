@@ -1,0 +1,11 @@
+services:
+  progress-qa:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./progress.json:/app/progress.json
+      - ./progress_backup.json:/app/progress_backup.json
+    environment:
+      - FLASK_ENV=production
+    restart: unless-stopped
