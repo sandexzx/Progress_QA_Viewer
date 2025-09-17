@@ -8,11 +8,29 @@ from typing import List, Dict, Any
 
 class Storage:
     def __init__(self, path: str):
-        self.path = path
+        self.path = self._normalize_path(path)
         self._lock = threading.Lock()
         if not os.path.exists(self.path):
             self._ensure_parent()
-            self._write({'total': 0, 'events': []})
+            self._write(self._initial_state())
+
+    def _normalize_path(self, raw_path: str) -> str:
+        """Allow mounting a directory in place of the JSON file (e.g. Docker bind)."""
+        if os.path.isdir(raw_path):
+            for candidate_name in ('data.json', 'progress.json'):
+                candidate = os.path.join(raw_path, candidate_name)
+                if os.path.isfile(candidate):
+                    return candidate
+            return os.path.join(raw_path, 'data.json')
+        return raw_path
+
+    def _initial_state(self) -> Dict[str, Any]:
+        return {
+            'total': 0,
+            'events': [],
+            'daily_goal': 10,
+            'daily_progress': {},
+        }
 
     def _ensure_parent(self):
         parent = os.path.dirname(self.path)
@@ -22,12 +40,12 @@ class Storage:
     def _read(self) -> Dict[str, Any]:
         with self._lock:
             if not os.path.exists(self.path):
-                return {'total': 0, 'events': [], 'daily_goal': 10, 'daily_progress': {}}
+                return self._initial_state()
             with open(self.path, 'r', encoding='utf-8') as f:
                 try:
                     data = json.load(f)
                 except json.JSONDecodeError:
-                    data = {'total': 0, 'events': [], 'daily_goal': 10, 'daily_progress': {}}
+                    data = self._initial_state()
         data.setdefault('total', 0)
         data.setdefault('events', [])
         data.setdefault('daily_goal', 10)
@@ -51,6 +69,16 @@ class Storage:
             with open(tmp_path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, separators=(',', ':'), indent=2)
             os.replace(tmp_path, self.path)
+
+    def reset(self):
+        data = self._read()
+        daily_goal = data.get('daily_goal', 10)
+        self._write({
+            'total': 0,
+            'events': [],
+            'daily_goal': daily_goal,
+            'daily_progress': {},
+        })
 
     def get_total(self) -> int:
         return int(self._read().get('total', 0))

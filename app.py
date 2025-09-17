@@ -162,10 +162,7 @@ def create_app() -> Flask:
 
     @app.route('/reset', methods=['POST'])
     def reset():
-        data = storage._read()
-        data['total'] = 0
-        data['events'] = []
-        storage._write(data)
+        storage.reset()
         return redirect(url_for('index'))
 
     def _compute_rate_and_eta(total: int, events: List[Dict[str, Any]]):

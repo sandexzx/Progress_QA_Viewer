@@ -58,7 +58,7 @@ sudo docker compose down
 sudo docker compose restart
 
 # Пересобрать образ
-sudo docker compose up --build -d
+
 ```
 
 ### Примечание по правам доступа
@@ -81,3 +81,4 @@ sudo docker compose up --build -d
 
 - Прогноз считается по средней скорости (вопросов/день) от первой отметки до последней. Если данных мало — оценка может быть грубой.
 
+sudo docker compose up --build -d
